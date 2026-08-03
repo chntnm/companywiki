@@ -1,0 +1,74 @@
+name: gh-brain intake
+
+# Reusable workflow (Option A of sync/gh-sync-spec.md). Individual repos call
+# this via a ~10-line caller workflow on push-to-default / PR-merge; see
+# sync/gh-sync-spec.md for the caller snippet and the bootstrap script that
+# adds it org-wide.
+#
+# NOTE: sync/scripts/gh_brain_intake.py is a stub; see sync/scripts/README.md.
+
+on:
+  workflow_call:
+    inputs:
+      source_repo:
+        required: true
+        type: string
+      sha_before:
+        required: false
+        type: string
+      sha_after:
+        required: false
+        type: string
+      pr_number:
+        required: false
+        type: string
+    secrets:
+      SERVICE_CLAUDE_ANTHROPIC_API_KEY:
+        required: true
+      SERVICE_CLAUDE_GH_TOKEN:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: <org>/companywiki
+          token: ${{ secrets.SERVICE_CLAUDE_GH_TOKEN }}
+
+      - name: Fetch source diff and classify
+        env:
+          GH_TOKEN: ${{ secrets.SERVICE_CLAUDE_GH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.SERVICE_CLAUDE_ANTHROPIC_API_KEY }}
+        run: |
+          python sync/scripts/gh_brain_intake.py \
+            --source-repo "${{ inputs.source_repo }}" \
+            --sha-before "${{ inputs.sha_before }}" \
+            --sha-after "${{ inputs.sha_after }}" \
+            --pr-number "${{ inputs.pr_number }}" \
+            --out-branch "gh-brain-intake/${{ inputs.source_repo }}-${{ inputs.sha_after }}"
+          # Per sync/gh-sync-spec.md steps 2-4: classifies whether the diff is
+          # decision-worthy and, if so, drafts gh-brain/apps/<repo>/... on the
+          # out-branch. Every merge, routine or not, also gets a merge-log.md
+          # line. Whether routine merges reach merge-log.md via this branch or
+          # via a direct commit to main is unresolved; see DESIGN-REVIEW.md D7.
+
+      - name: Open PR to companywiki (if a draft was produced)
+        env:
+          GH_TOKEN: ${{ secrets.SERVICE_CLAUDE_GH_TOKEN }}
+        run: |
+          if git rev-parse --verify "gh-brain-intake/${{ inputs.source_repo }}-${{ inputs.sha_after }}" >/dev/null 2>&1; then
+            git push origin "gh-brain-intake/${{ inputs.source_repo }}-${{ inputs.sha_after }}"
+            gh pr create \
+              --title "gh-brain: ${{ inputs.source_repo }} @ ${{ inputs.sha_after }}" \
+              --body "Automated draft from sync/gh-sync-spec.md intake pipeline. Source: ${{ inputs.source_repo }} PR #${{ inputs.pr_number }}." \
+              --base main \
+              --head "gh-brain-intake/${{ inputs.source_repo }}-${{ inputs.sha_after }}"
+          fi
+          # Opening this PR triggers .github/workflows/conviction-review.yml
+          # automatically (same as any other PR against companywiki).

@@ -1,0 +1,14 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Local secrets — never commit; these live in GitHub org secrets
+# (see DEPENDENCIES.md)
+.env
+.env.*
+*.pem
+*.key

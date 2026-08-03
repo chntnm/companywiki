@@ -1,0 +1,76 @@
+name: conviction review
+
+# Implements sync/conviction-score-workflow.md. Runs on every PR against
+# companywiki regardless of whether it was opened by a human contributor or
+# by the gh-brain / sp-brain intake pipelines.
+#
+# NOTE: sync/scripts/*.py referenced below are stubs (see sync/scripts/README.md);
+# this workflow documents the intended shape of the pipeline; the scripts need
+# real implementations plus SERVICE_CLAUDE_ANTHROPIC_API_KEY and
+# SERVICE_CLAUDE_GH_TOKEN secrets before this runs end to end.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write        # to push the contradiction-log entry onto the PR branch
+  pull-requests: write   # to comment + label
+  issues: write          # labels API lives under issues in some GH API paths
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Gather diff and related docs
+        id: gather
+        run: |
+          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > pr.diff
+          # Cheap-start related-doc search per sync/conviction-score-workflow.md:
+          # grep front-matter `summary:`/`title:` lines across master-brain and
+          # the touched repo/topic folder for anything topically adjacent.
+          touched_dir=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD | head -1 | cut -d/ -f1-2)
+          grep -rl "^title:\|^summary:" master-brain/ "$touched_dir" 2>/dev/null > related_files.txt || true
+
+      - name: Score with Claude
+        id: score
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.SERVICE_CLAUDE_ANTHROPIC_API_KEY }}
+        run: |
+          python sync/scripts/score_pr.py \
+            --diff pr.diff \
+            --related related_files.txt \
+            --hierarchy governance/hierarchy.yaml \
+            --pr-author "${{ github.event.pull_request.user.login }}" \
+            --out score.json
+          # score.json: {"summary":..., "conviction_score":N,
+          #   "contradicts":[{"path":...,"author":...,"author_level":N,"reason":...}],
+          #   "rationale":...}
+
+      - name: Post comment + labels
+        env:
+          GH_TOKEN: ${{ secrets.SERVICE_CLAUDE_GH_TOKEN }}
+        run: |
+          python sync/scripts/post_score.py \
+            --score score.json \
+            --repo ${{ github.repository }} \
+            --pr ${{ github.event.pull_request.number }}
+          # post_score.py: posts the PR comment, applies conviction:<N> label,
+          # applies contradiction label + appends governance/contradiction-log.md
+          # + pushes that commit to the PR branch, and assigns a reviewer per
+          # governance/review-workflow.md routing rules using hierarchy.yaml.
+
+      - name: Assign reviewer
+        env:
+          GH_TOKEN: ${{ secrets.SERVICE_CLAUDE_GH_TOKEN }}
+        run: |
+          python sync/scripts/assign_reviewer.py \
+            --score score.json \
+            --hierarchy governance/hierarchy.yaml \
+            --repo ${{ github.repository }} \
+            --pr ${{ github.event.pull_request.number }}

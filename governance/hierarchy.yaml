@@ -1,0 +1,44 @@
+# Seniority roster used by governance/review-workflow.md to route PR review
+# and by the conviction-scoring bot to weight contradictions.
+#
+# This file is human-owned. service_claude may read it but must never edit it
+# (see CLAUDE.md hard constraints).
+#
+# levels, low -> high precedence:
+#   1 = ic_junior
+#   2 = ic
+#   3 = ic_senior
+#   4 = manager
+#   5 = director_plus
+#
+# A decision authored at a given level can only be overridden (marked
+# Superseded-by) by a decision authored at the same level or higher, OR by a
+# lower-level decision that has been explicitly approved by someone at
+# `level` or above per governance/review-workflow.md.
+
+# The roster below is a structural placeholder. Every handle is fabricated;
+# replace the whole block with the real roster before this file is used to
+# route anything.
+teams:
+  platform:
+    manager: example-manager
+    members:
+      - { github: example-manager,   sp: example.manager,   level: 4, role: manager }
+      - { github: example-senior,    sp: example.senior,    level: 3, role: ic_senior }
+      - { github: example-ic,        sp: example.ic,        level: 2, role: ic }
+      - { github: example-junior,    sp: example.junior,    level: 1, role: ic_junior }
+
+  # Add additional teams here. Every GitHub org member who can open a PR
+  # against companywiki should appear in exactly one team with a `level`.
+  # repo/schema -> team ownership mapping lives in each entry's top-level
+  # front-matter (gh-brain/apps/<repo>.md or gh-brain/database/<schema>.md,
+  # `owning_team:`), not here; this file only defines people and levels,
+  # not repo/schema assignments.
+
+# Fallback when a repo's owning_team is unset or an author can't be matched
+# to a roster entry: treat as level 1 (most conservative, always routes to
+# manager review).
+#
+# No maintenance owner or refresh cadence is defined yet, and the schema
+# assumes exactly one team per person. See DESIGN-REVIEW.md D11.
+default_level: 1

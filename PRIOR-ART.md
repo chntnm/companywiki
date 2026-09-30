@@ -278,50 +278,124 @@ Every response is reviewed, validated, and refined by an engineer.
 
 ## Morgan Stanley: AI @ Morgan Stanley Assistant / AskResearchGPT
 
-`[first-party-pr]`
-- https://www.morganstanley.com/press-releases/morgan-stanley-research-announces-askresearchgpt
-- https://www.morganstanley.com/press-releases/key-milestone-in-innovation-journey-with-openai
-- https://openai.com/index/morgan-stanley/
+`[first-party]` — all three read in full on 2026-09-03.
+- https://www.morganstanley.com/press-releases/morgan-stanley-research-announces-askresearchgpt (23 Oct 2024)
+- https://www.morganstanley.com/press-releases/key-milestone-in-innovation-journey-with-openai (14 Mar 2023)
+- https://openai.com/index/morgan-stanley/ ("Morgan Stanley uses AI evals to shape the future of financial services")
 
-> Caveat: morganstanley.com reset the connection and openai.com returned 403
-> on direct fetch from this machine, on 2026-08-27 as well as earlier. Detail
-> below is search-surfaced from those first-party pages, not fetched in full.
-> **Verify before citing numbers.** Open the URLs in a browser.
+> **Tier upgraded 2026-09-03.** These three pages still refuse automated
+> fetch from this machine (morganstanley.com resets the connection,
+> openai.com returns 403), but all three were opened in a browser and
+> captured to PDF. Everything below is now read from the primary text, not
+> search-surfaced. Two claims in the previous version of this section were
+> wrong and are corrected below.
 
-**Implementation.** GPT-4 over Morgan Stanley's proprietary research corpus
-(research reports, PDF strategy guides, market commentary) retrieved via
-RAG against a curated, pre-vetted internal collection rather than the open
-web. **AskResearchGPT**, released 2024, extends the existing AskResearch
-chatbot across the firm's 70,000+ proprietary reports a year and serves
-Institutional Securities. It ships with a Morgan-Stanley-patented one-click
-workflow that moves findings into an email draft carrying links back to the
-source documents. A third product, **Debrief**, does meeting summaries via
-Whisper + GPT-4.
+### Two products, not one — do not conflate them
 
-> The older note here flagged that third-party aggregators disagreed on
-> corpus size (100k vs 350k documents). That dispute is moot: the first-party
-> release states 70,000+ reports annually. Use that figure.
+The earlier note ran these together. They are separate systems with separate
+corpora, audiences and dates.
 
-**Philosophy.** A curated, pre-vetted corpus is the control, and the model
-never reaches past it. Findings are handed to a person to edit rather than
-sent onward automatically, and every answer carries links back to the
-underlying research. The OpenAI page is titled "Morgan Stanley uses AI evals
-to shape the future of financial services", so evals are the framing they
-chose publicly, but the page body was not readable from here and what that
-means concretely is unverified.
+| | AI @ Morgan Stanley Assistant | AskResearchGPT |
+|---|---|---|
+| Division | Wealth Management | Institutional Securities |
+| Users | Financial advisors and staff | Investment Banking, Sales & Trading, Research |
+| Announced | 14 Mar 2023; rolled out over the following year | 23 Oct 2024 |
+| Corpus | "a corpus of 100,000 documents" (Wu, OpenAI page — his phrasing, not an inventory count) | 70,000+ proprietary research reports published annually |
+| Adoption | **over 98% of advisor teams** | 3x question volume vs the predecessor tool `[secondary]` |
 
-**How it's used.** Announced partnership March 2023, full advisor rollout
-September 2023, Institutional Securities from 2024. Staff ask roughly 3x more
-questions than they did of the previous tool, and salespeople answer client
-queries in about a tenth of the time. Reported >98% of advisor teams active.
-**[unverified]** A reported jump in document access from 20% to 80%.
+The >98% figure belongs to the **Assistant**, not AskResearchGPT. The deck
+currently attributes it to AskResearchGPT. That is a citation error.
 
-**`[secondary]`, worth chasing but not sourced.** Third-party writeups
+**Implementation.** GPT-4 retrieving against curated internal collections,
+never the open web. The 2023 release is unusually explicit about the
+boundary: "The solutions that Morgan Stanley Wealth Management are building
+do not use ChatGPT, which leverages GPT-3.5 and generates responses from the
+public internet. Morgan Stanley Wealth Management is using GPT-4 to generate
+responses exclusively from internal Morgan Stanley content, with appropriate
+controls." AskResearchGPT extends the earlier AskResearch chatbot by
+synthesising unstructured data across multiple research products. It ships
+with a Morgan-Stanley-patented one-click workflow moving findings into an
+email draft, "ready to be modified and customized before sharing with their
+clients," with hyperlinks to citations of the source research. **Debrief**
+(Whisper + GPT-4) turns consented Zoom recordings into client notes written
+straight into CRM, plus draft follow-ups; advisors review and adjust before
+finalising. OpenAI operates zero data retention for them.
+
+> Corpus figures, and how far each is load-bearing. 70,000+ reports/year is
+> Research, stated flatly in the Oct 2024 release — solid. The 100,000 figure
+> is Wealth Management and comes from one quote by David Wu: "We went from
+> being able to answer 7,000 questions to a place where we can now
+> effectively answer any question from a corpus of 100,000 documents." Read
+> it carefully: the sentence is about retrieval capability improving, and
+> "a corpus of 100,000 documents" is his framing of what the system can now
+> handle — **not necessarily a current inventory count.** Attribute it to Wu
+> rather than asserting it as the corpus size.
+>
+> This does partly rehabilitate the 100k figure the old note dismissed. The
+> old note claimed third-party aggregators had invented it (100k vs 350k) and
+> told readers to discard it in favour of 70,000. Two errors there: the two
+> numbers describe different corpora, and 100k traces to a first-party quote.
+> The 350k figure remains unsourced.
+>
+> **Not on the slide, deliberately.** Because the 100k figure is only as firm
+> as Wu's phrasing, the rebuilt deck (2026-09-03) does not show it. Slide 15
+> carries 70,000+ reports/year and the 20%→80% document-access jump instead,
+> both of which are stated flatly rather than framed inside a quote. The
+> figure is recorded here so it is available if asked; it is not missing from
+> the deck by oversight.
+
+**Philosophy.** The curated, pre-vetted corpus is the control, not prompt
+engineering or model choice. Human authority is stated directly by Andy
+Saperstein, Co-President and Head of MSWM: "We believe trust-based
+relationships and human advice will always be valued by clients, and the
+Financial Advisor and their teams will remain the center of our wealth
+management universe." Every answer carries links back to the underlying
+research so a claim can be checked before it is repeated.
+
+**How it's used.** Partnership announced March 2023; Assistant rolled out to
+WM advisors over the following year; AskResearchGPT to Institutional
+Securities from October 2024. Over 98% of advisor teams actively use the
+Assistant daily. Document access rose from 20% to 80% `[first-party, OpenAI
+page]`. Staff ask roughly 3x the questions they asked of the 2017-era
+predecessor tool, and a salesperson answers the average client inquiry in
+about a tenth of the time — **both figures are CNBC (23 Oct 2024), sourced
+from interview, and appear in neither press release.** `[secondary]`
+
+**Maintenance — this corrects the previous entry.** The old note said "there
+is no public account of reindexing, eval cadence or drift handling, making
+this the least documented of the first-party set." **That is false.** The
+OpenAI page documents an eval framework applied to every AI use case before
+deployment:
+
+- **Summarization evals** — advisors and prompt engineers grade responses for
+  accuracy and coherence, feeding prompt refinement.
+- **Translation evals**, added later for multilingual clients.
+- **Retrieval tuning with OpenAI** against eval results: "What can we change
+  about our retrieval methods to help the accuracy we need at Morgan
+  Stanley?" (Kaitlin Elliott, Head of Firmwide Generative AI Solutions).
+- **A daily regression suite of sample questions** as standing QA.
+- **Per-product eval datasets** — for Debrief, datasets representing meeting
+  types, testing capture of action items without introducing errors.
+
+A daily regression suite is a concrete freshness-and-drift mechanism. Morgan
+Stanley belongs alongside Dropbox as one of the two companies in this set
+with an explicit, published eval discipline — not at the bottom of it.
+
+**Named sources.** Katy Huberty (Global Director of Research, Co-Chair AI
+Steering Committee); Eden Kidner (Head of Technology Strategy, MS Research);
+Andy Saperstein (Co-President, Head of MSWM); Jeff McMillan (Head of
+Firmwide AI; Head of Analytics, Data & Innovation for MSWM in 2023); David
+Wu (Head of Firmwide AI Product & Architecture Strategy); Kaitlin Elliott
+(Head of Firmwide Generative AI Solutions).
+
+**`[refuted]` — previously "worth chasing".** Third-party writeups
 (compelframework.org, aiexpert.network) claim advisors are barred from
-forwarding assistant output to clients, and must read it, integrate it, then
-speak to the client themselves. It appears in *no* first-party source found
-here, and it sits awkwardly against the confirmed one-click export into a
-client email draft above. Confirm it before repeating it.
+forwarding assistant output to clients. No first-party source says this, and
+the Oct 2024 release states the opposite mechanism directly: a patented
+one-click transfer of findings into an email draft "ready to be modified and
+customized before sharing with their clients." The constraint is that a
+person edits before sending, not that output cannot be sent. Do not repeat
+the third-party version.
 
 ---
 
